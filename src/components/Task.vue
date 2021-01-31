@@ -1,39 +1,66 @@
 <template>
   <div id="task">
-    <form>
-      <input v-model="tarefa" type="text" placeholder="Tarefa de hoje?" />
-      <button @click="addItem">Adicionar</button>
+    <form @submit.prevent="addItem">
+      <input type="text" placeholder="Tarefa de hoje?" v-model="tarefa" />
+      <button type="submit">Adicionar</button>
     </form>
+
+    <Item :lista="tarefas" :delete="deleteTask" />
+
+    <span v-show="tarefas.length > 0">
+      Você tem <strong :class="{pend: pendente}" >{{tarefas.length}}</strong> tarefas pendente(s).
+    </span>
   </div>
 </template>
 
 
 <script>
+import Item from "./Item";
 export default {
-    name: 'Task',
-    data(){
-        return{
-            tarefa: '',
-            tarefas: [],
-        }    
-        },
+  name: "Task",
+  components: {
+    Item,
+  },
+  data() {
+    return {
+      tarefa: "",
+      tarefas: [],
+      pendente: false,
+    };
+  },
+  methods: {
+    addItem() {
+      if (this.tarefa !== "") {
+        this.tarefas.push({
+          text: this.tarefa,
+          key: Date.now(),
+        });
+      } else {
+        alert("Digite uma tarefa..");
+        return;
+      }
 
-        methods: {
-            addItem(){
-                if(this.tarefa !== ''){
-                    this.tarefas.push({
-                        text: this.tarefa,
-                        key: Date.now(),
-                    });
-                }else{
-                    alert('DIgite uma tarefa!');
-                    return;
-                }
-                this.tarefa = '';
-            }
-        }
-}
+      this.tarefa = "";
+    },
 
+    deleteTask(key) {
+      let filtro = this.tarefas.filter((item) => {
+        return item.key !== key;
+      });
+      return (this.tarefas = filtro);
+    },
+  },
+  watch: {
+    tarefas() {
+      localStorage.setItem("minhasTarefas", JSON.stringify(this.tarefas));
+      this.tarefas.length > 4 ? this.pendente = true : this.pendente = false;
+    },
+  },
+  created() {
+    const minhasTarefas = localStorage.getItem("minhasTarefas");
+    this.tarefas = JSON.parse(minhasTarefas) || [];
+  },
+};
 </script>
 
 <style scoped>
@@ -72,5 +99,9 @@ input {
   border-radius: 4px;
   font-size: 14px;
   outline: none;
+}
+
+.pend{
+  color: red;
 }
 </style>
